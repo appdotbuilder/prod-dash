@@ -1,10 +1,27 @@
-import { type StaffMember } from '../schema';
+import { db } from '../db';
+import { staffMembersTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 
 export const deleteStaffMember = async (id: number): Promise<{ success: boolean }> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is removing a staff member from the database.
-    // It should validate that the staff member exists and then delete the record.
-    return Promise.resolve({
-        success: true // Placeholder success flag
-    });
+  try {
+    // First check if the staff member exists
+    const existingStaffMember = await db.select()
+      .from(staffMembersTable)
+      .where(eq(staffMembersTable.id, id))
+      .execute();
+
+    if (existingStaffMember.length === 0) {
+      throw new Error(`Staff member with id ${id} not found`);
+    }
+
+    // Delete the staff member
+    const result = await db.delete(staffMembersTable)
+      .where(eq(staffMembersTable.id, id))
+      .execute();
+
+    return { success: true };
+  } catch (error) {
+    console.error('Staff member deletion failed:', error);
+    throw error;
+  }
 };

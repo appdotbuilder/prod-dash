@@ -1,15 +1,30 @@
+import { db } from '../db';
+import { kpiDataTable } from '../db/schema';
 import { type CreateKpiDataInput, type KpiData } from '../schema';
 
 export const createKpiData = async (input: CreateKpiDataInput): Promise<KpiData> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating new KPI data entry persisting it in the database.
-    // It should validate the input data and insert it into the kpi_data table.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+  try {
+    // Insert KPI data record
+    const result = await db.insert(kpiDataTable)
+      .values({
         week_date: input.week_date,
-        efficiency: input.efficiency,
-        production_rate: input.production_rate,
-        defects_ppm: input.defects_ppm,
-        created_at: new Date() // Placeholder date
-    } as KpiData);
+        efficiency: input.efficiency.toString(), // Convert number to string for numeric column
+        production_rate: input.production_rate.toString(), // Convert number to string for numeric column
+        defects_ppm: input.defects_ppm.toString() // Convert number to string for numeric column
+      })
+      .returning()
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    const kpiData = result[0];
+    return {
+      ...kpiData,
+      efficiency: parseFloat(kpiData.efficiency), // Convert string back to number
+      production_rate: parseFloat(kpiData.production_rate), // Convert string back to number
+      defects_ppm: parseFloat(kpiData.defects_ppm) // Convert string back to number
+    };
+  } catch (error) {
+    console.error('KPI data creation failed:', error);
+    throw error;
+  }
 };
